@@ -1,0 +1,40 @@
+name: 'Terraform'
+
+on: [push, pull_request]
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1              
+          
+      - name: 'Terraform Format'
+        working-directory: examples/simple      
+        run: terraform fmt -check -diff
+        continue-on-error: true
+
+      - name: 'Terraform Validate'
+        working-directory: examples/simple      
+        env:
+          AWS_REGION: 'us-east-1'
+        run: |
+          terraform init
+          terraform validate -no-color
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request'
+        run: terraform plan -no-color
+        working-directory: examples/simple
+        continue-on-error: true
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1 
