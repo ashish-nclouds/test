@@ -23,7 +23,7 @@ module "vpc" {
 # Create an ASG
 module "asg" {
   source               = "../.."
-  iam_instance_profile = module.example_role.output.instance_profile.arn
+  iam_instance_profile = "arn:aws:iam::695292474035:instance-profile/ec2-admin"
   user_data_base64     = base64encode(local.instance_userdata)
   security_groups      = [module.security_group.output.security_group.id]
   identifier           = var.identifier
